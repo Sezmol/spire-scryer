@@ -1,0 +1,17 @@
+# Spire Scryer — Twitch EBS configuration
+#
+# Rename this file to "spirescryer_config.txt" and place it in:
+#   %APPDATA%\MegaCrit\SlayTheSpire2\spirescryer_config.txt
+#
+# Lines starting with # are ignored.
+# Do NOT share this file — MOD_SECRET authenticates your game as the
+# data source for your Twitch channel overlay.
+#
+# Easiest way to fill this in: open the Spire Scryer extension's
+# Config view in your Twitch Dashboard, click "Generate New Secret",
+# and copy the ready-to-paste block from there. It already contains
+# the correct EBS_URL, a fresh MOD_SECRET, and your CHANNEL_ID.
+
+EBS_URL=https://spire-scryer-ebs.spire-scryer.workers.dev
+MOD_SECRET=replace-me-with-value-from-config-view
+CHANNEL_ID=000000000

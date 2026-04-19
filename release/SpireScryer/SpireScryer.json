@@ -1,0 +1,10 @@
+{
+  "id": "SpireScryer",
+  "name": "Spire Scryer",
+  "author": "Sezmol",
+  "description": "Exports deck, relics, and potions to a local HTTP API for stream overlays. Inspired by Slay the Relics (LordAddy / Spireblight) for the original Slay the Spire.",
+  "version": "0.2.0",
+  "has_pck": false,
+  "has_dll": true,
+  "affects_gameplay": false
+}

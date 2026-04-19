@@ -1,0 +1,10 @@
+.env
+.godot/
+.wolf/
+.wrangler/
+.claude/
+release/**/*.zip
+bin/
+obj/
+*.user
+node_modules/

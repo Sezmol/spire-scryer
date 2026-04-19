@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spire Scryer — Config</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #0e0c1f;
+        color: #e8dcc2;
+        padding: 24px;
+        margin: 0;
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: 22px;
+        color: #c9a557;
+      }
+
+      p {
+        line-height: 1.5;
+        color: #a0957f;
+        font-size: 14px;
+      }
+
+      .card {
+        background: #1a172e;
+        border: 1px solid rgba(180, 148, 90, 0.25);
+        border-left: 2px solid #c9a557;
+        padding: 20px;
+        margin: 16px 0;
+      }
+
+      code {
+        background: rgba(0, 0, 0, 0.35);
+        padding: 2px 6px;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 12px;
+        color: #e8dcc2;
+        word-break: break-all;
+        display: inline-block;
+      }
+
+      button {
+        background: #c9a557;
+        color: #0e0c1f;
+        border: none;
+        padding: 10px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+        font-family: inherit;
+      }
+
+      button:hover {
+        background: #d4b56f;
+      }
+
+      button:disabled {
+        background: #555;
+        cursor: not-allowed;
+      }
+
+      .secret-box {
+        background: #0a0814;
+        border: 1px solid rgba(180, 148, 90, 0.4);
+        padding: 12px;
+        margin: 12px 0;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 13px;
+        word-break: break-all;
+        white-space: pre-wrap;
+        color: #e8dcc2;
+      }
+
+      .copy-btn {
+        background: #3a2e52;
+        color: #e8dcc2;
+        border: 1px solid rgba(180, 148, 90, 0.4);
+        padding: 6px 12px;
+        font-size: 12px;
+        font-family: inherit;
+        cursor: pointer;
+        margin-left: 8px;
+      }
+
+      .copy-btn:hover {
+        background: #4d3e6b;
+      }
+
+      .copy-btn.ok {
+        background: #2d5a35;
+        color: #b8e0c2;
+      }
+
+      .steps {
+        padding-left: 18px;
+      }
+
+      .steps li {
+        margin: 8px 0;
+      }
+
+      .status {
+        margin-top: 12px;
+        font-size: 13px;
+      }
+
+      .status.err {
+        color: #c95a5a;
+      }
+      .status.ok {
+        color: #6bb07a;
+      }
+
+      .warning {
+        color: #d4a84a;
+        font-size: 12px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Spire Scryer — Broadcaster Setup</h1>
+
+    <div class="card">
+      <p>
+        <strong>Step 1.</strong> Generate your personal push secret. This secret
+        lets your game mod send state to your channel only.
+      </p>
+
+      <button id="gen-btn">Generate New Secret</button>
+
+      <div class="status" id="status"></div>
+
+      <div id="secret-wrap" style="display: none">
+        <p style="margin-top: 18px"><strong>Your secret:</strong></p>
+        <div class="secret-box" id="secret-out"></div>
+        <p class="warning">
+          ⚠ Do not share this secret. Anyone with it can push fake game state to
+          your channel overlay.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <p>
+        <strong>Step 2.</strong> Create file
+        <code>spirescryer_config.txt</code> in:
+      </p>
+
+      <div class="secret-box" id="path-out">
+        %APPDATA%\MegaCrit\SlayTheSpire2\spirescryer_config.txt
+      </div>
+
+      <p>
+        <strong>Step 3.</strong> Paste this content into it
+        <button class="copy-btn" id="copy-btn">Copy</button>
+      </p>
+      <div class="secret-box" id="cfg-out">(Generate secret first)</div>
+    </div>
+
+    <div class="card">
+      <p>
+        <strong>Step 4.</strong> Restart Slay the Spire 2. The mod will push
+        state to your Twitch overlay.
+      </p>
+
+      <p>If something is wrong, check the mod log at:</p>
+
+      <div class="secret-box">
+        %APPDATA%\MegaCrit\SlayTheSpire2\spirescryer.log
+      </div>
+
+      <p>Look for: <code>Twitch EBS push enabled</code></p>
+    </div>
+
+    <div class="card">
+      <p style="font-size: 12px; color: #a0957f; margin: 0">
+        <strong>Heads up.</strong> The relay service is hosted on a free tier
+        and may degrade under heavy aggregate load. Best-effort hobby service,
+        no uptime guarantee.
+      </p>
+    </div>
+
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <script src="config.js"></script>
+  </body>
+</html>
