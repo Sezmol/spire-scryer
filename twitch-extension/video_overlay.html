@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spire Scryer — Overlay</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kreon:wght@400;500;600;700&family=Noto+Serif:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg-overlay: rgba(12, 10, 8, 0.94);
+        --bg-panel: rgba(20, 17, 14, 0.97);
+        --bg-card: rgba(30, 26, 22, 0.8);
+        --bg-tooltip: rgba(16, 13, 10, 0.98);
+        --border-subtle: rgba(180, 148, 90, 0.18);
+        --border-accent: rgba(180, 148, 90, 0.45);
+
+        --ink-primary: #e8dcc2;
+        --ink-secondary: #a0957f;
+        --ink-muted: #6e6558;
+
+        --accent-gold: #c9a557;
+        --accent-gold-dim: #8b7641;
+        --accent-red: #c95a5a;
+        --accent-green: #6bb07a;
+        --accent-blue: #5a89c9;
+
+        --rarity-common: #c9c4b7;
+        --rarity-uncommon: #5a89c9;
+        --rarity-rare: #d4a84a;
+        --rarity-boss: #c95a5a;
+        --rarity-starter: #7a7066;
+        --rarity-shop: #5ac9a8;
+
+        --font-display: "Kreon", "Noto Serif", "Times New Roman", serif;
+        --font-body: "Noto Serif", "Times New Roman", serif;
+        --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+        --class-ironclad: #b8413a;
+        --class-silent: #4a7f3d;
+        --class-regent: #e09040;
+        --class-necrobinder: #8a4dbf;
+        --class-defect: #3fa8c4;
+        --class-colorless: #6a6a6a;
+        --class-curse: #c97fd4;
+
+        --shadow-deep:
+          0 24px 48px -12px rgba(0, 0, 0, 0.8),
+          0 8px 16px -8px rgba(0, 0, 0, 0.6);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        font-family: var(--font-display);
+        color: var(--ink-primary);
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      #hotspot-layer {
+        position: fixed;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+      }
+
+      .hotspot {
+        position: absolute;
+        pointer-events: all;
+        cursor: pointer;
+      }
+
+      .hotspot-relic {
+        top: 10%;
+        height: 7.5%;
+        width: 3.8%;
+      }
+
+      .hotspot-deck {
+        top: 0;
+        right: 5%;
+        width: 4.2%;
+        height: 6%;
+      }
+
+      .hotspot-draw {
+        bottom: 1%;
+        left: 0.8%;
+        width: 4%;
+        height: 7.6%;
+      }
+
+      .hotspot-discard {
+        bottom: 1%;
+        right: 0.8%;
+        width: 4%;
+        height: 7.6%;
+      }
+
+      .hotspot-exhaust {
+        bottom: 20%;
+        right: 0.8%;
+        width: 3.8%;
+        height: 6%;
+      }
+
+      .hotspot-potion {
+        top: 0.5%;
+        height: 7%;
+        width: 3%;
+      }
+
+      .tooltip {
+        position: fixed;
+        z-index: 50;
+        min-width: 220px;
+        max-width: 300px;
+        background: var(--bg-tooltip);
+        border: 1px solid var(--border-subtle);
+        border-left: 2px solid var(--accent-gold);
+        box-shadow: var(--shadow-deep);
+        padding: 12px 14px 14px;
+        pointer-events: none;
+        display: none;
+        animation: fadeIn 120ms ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .tooltip.visible {
+        display: block;
+      }
+
+      .tooltip-title {
+        font-family: var(--font-display);
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--ink-primary);
+        margin-bottom: 4px;
+      }
+
+      .tooltip-meta {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-bottom: 8px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .rarity-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--rarity-common);
+        flex-shrink: 0;
+      }
+      .rarity-dot[data-rarity="Uncommon"] {
+        background: var(--rarity-uncommon);
+      }
+      .rarity-dot[data-rarity="Rare"] {
+        background: var(--rarity-rare);
+      }
+      .rarity-dot[data-rarity="Boss"] {
+        background: var(--rarity-boss);
+      }
+      .rarity-dot[data-rarity="Starter"] {
+        background: var(--rarity-starter);
+      }
+      .rarity-dot[data-rarity="Shop"] {
+        background: var(--rarity-shop);
+      }
+
+      .tooltip-desc {
+        font-family: var(--font-display);
+        font-size: 13px;
+        line-height: 1.4;
+        color: var(--ink-secondary);
+      }
+
+      .g {
+        color: var(--accent-green);
+        font-weight: 500;
+      }
+      .r {
+        color: var(--accent-red);
+        font-weight: 500;
+      }
+      .b {
+        color: var(--accent-blue);
+        font-weight: 500;
+      }
+      .y {
+        color: var(--accent-gold);
+        font-weight: 500;
+      }
+      .num {
+        color: var(--ink-primary);
+        font-weight: 500;
+      }
+
+      .panel {
+        position: fixed;
+        z-index: 40;
+        background: var(--bg-panel);
+        border: 1px solid var(--border-subtle);
+        border-left: 2px solid var(--accent-gold);
+        box-shadow: var(--shadow-deep);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        animation: slideIn 220ms cubic-bezier(0.25, 0.8, 0.4, 1);
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .panel.open {
+        display: flex;
+      }
+
+      #panel-deck {
+        top: 8%;
+        right: 1%;
+        width: min(700px, 55vw);
+        max-height: 82vh;
+      }
+
+      #panel-combat {
+        bottom: 16%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(700px, 80vw);
+        max-height: 60vh;
+      }
+
+      .panel-header {
+        padding: 14px 20px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+
+      .panel-tabs {
+        display: flex;
+        gap: 0;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border-subtle);
+        flex-shrink: 0;
+      }
+
+      .panel-tab {
+        all: unset;
+        cursor: pointer;
+        padding: 9px 18px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition:
+          color 120ms,
+          border-color 120ms;
+      }
+
+      .panel-tab:hover {
+        color: var(--ink-secondary);
+      }
+      .panel-tab.active {
+        color: var(--accent-gold);
+        border-bottom-color: var(--accent-gold);
+      }
+
+      .panel-title {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-primary);
+      }
+
+      .panel-meta {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: var(--accent-gold-dim);
+      }
+
+      .panel-body {
+        padding: 14px 18px 18px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent-gold-dim) transparent;
+      }
+
+      .panel-body::-webkit-scrollbar {
+        width: 5px;
+      }
+      .panel-body::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .panel-body::-webkit-scrollbar-thumb {
+        background: var(--accent-gold-dim);
+        border-radius: 3px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 7px;
+      }
+      .grid--cards {
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 14px;
+        padding: 4px 2px 2px;
+      }
+      .grid--relics,
+      .grid--potions {
+        grid-template-columns: 1fr;
+      }
+
+      .item {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        padding: 9px 11px 11px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        transition:
+          border-color 140ms,
+          background 140ms;
+      }
+
+      .item:hover {
+        border-color: var(--border-accent);
+        background: rgba(40, 34, 28, 0.9);
+      }
+
+      .item--card {
+        --card-color: var(--class-colorless);
+        background: #2b2621;
+        border: 2px solid var(--card-color);
+        border-radius: 6px;
+        padding: 0;
+        overflow: hidden;
+        gap: 0;
+        position: relative;
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+          0 2px 6px rgba(0, 0, 0, 0.5);
+      }
+
+      .item--card[data-character="IRONCLAD"] {
+        --card-color: var(--class-ironclad);
+      }
+      .item--card[data-character="SILENT"] {
+        --card-color: var(--class-silent);
+      }
+      .item--card[data-character="REGENT"] {
+        --card-color: var(--class-regent);
+      }
+      .item--card[data-character="NECROBINDER"] {
+        --card-color: var(--class-necrobinder);
+      }
+      .item--card[data-character="DEFECT"] {
+        --card-color: var(--class-defect);
+      }
+      .item--card[data-type="STATUS"] {
+        --card-color: var(--class-colorless);
+      }
+      .item--card[data-type="CURSE"] {
+        --card-color: var(--class-curse);
+      }
+
+      .item--card:hover {
+        border-color: var(--card-color);
+        background: #2b2621;
+        filter: brightness(1.15);
+      }
+
+      .card-banner {
+        position: relative;
+        background: var(--card-color);
+        color: #f4e8d0;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 14px;
+        text-align: center;
+        padding: 8px 30px 7px 30px;
+        letter-spacing: 0.02em;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+      }
+
+      .card-banner::before,
+      .card-banner::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 12px;
+        height: 16px;
+        background: var(--card-color);
+        filter: brightness(0.75);
+        transform: translateY(-50%);
+      }
+      .card-banner::before {
+        left: 0;
+        clip-path: polygon(0 0, 100% 50%, 0 100%);
+      }
+      .card-banner::after {
+        right: 0;
+        clip-path: polygon(100% 0, 0 50%, 100% 100%);
+      }
+
+      .card-banner .upgrade {
+        color: #ffe58a;
+        margin-left: 2px;
+      }
+
+      .card-cost {
+        position: absolute;
+        top: 1px;
+        left: 4px;
+        width: 30px;
+        height: 30px;
+        background: var(--card-color);
+        color: #fff;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        z-index: 3;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+      }
+      .card-cost::after {
+        content: "";
+        position: absolute;
+        inset: 2px;
+        clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+        background: var(--card-color);
+        filter: brightness(1.2);
+        z-index: -1;
+      }
+      .card-cost.x {
+        color: #ffe58a;
+      }
+
+      .card-type {
+        text-align: center;
+        background: #8a8276;
+        color: #1a1512;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 3px 12px;
+        margin: 0 auto;
+        width: fit-content;
+        min-width: 54px;
+        border: 1px solid rgba(0, 0, 0, 0.5);
+        border-radius: 2px;
+        margin-top: 6px;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
+      .item--card[data-rarity="Uncommon"] .card-type {
+        background: #5fb0d4;
+        color: #0a1a22;
+      }
+      .item--card[data-rarity="Rare"] .card-type {
+        background: #e0b84a;
+        color: #1a1308;
+      }
+      .item--card[data-rarity="Boss"] .card-type {
+        background: #d45a5a;
+        color: #1a0808;
+      }
+
+      .card-desc {
+        font-family: var(--font-body);
+        font-size: 12px;
+        line-height: 1.35;
+        color: #d8ccb0;
+        text-align: center;
+        padding: 10px 12px 12px;
+        flex: 1;
+      }
+
+      .card-rarity {
+        position: absolute;
+        bottom: 3px;
+        right: 5px;
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(232, 220, 194, 0.5);
+      }
+
+      .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+
+      .item-title {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--ink-primary);
+        line-height: 1.2;
+        flex: 1;
+      }
+
+      .item-title .upgrade {
+        color: var(--accent-gold);
+        margin-left: 2px;
+      }
+
+      .item-cost {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-secondary);
+        min-width: 18px;
+        text-align: center;
+        padding: 1px 6px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--border-subtle);
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+
+      .item-cost.x {
+        color: var(--accent-gold);
+      }
+
+      .item-meta {
+        display: flex;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        color: var(--ink-muted);
+        text-transform: uppercase;
+        align-items: center;
+      }
+
+      .item-rarity {
+        position: relative;
+        padding-left: 10px;
+      }
+
+      .item-rarity::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 4px;
+        background: var(--rarity-common);
+        border-radius: 50%;
+      }
+
+      .item-rarity[data-rarity="Uncommon"]::before {
+        background: var(--rarity-uncommon);
+      }
+      .item-rarity[data-rarity="Rare"]::before {
+        background: var(--rarity-rare);
+      }
+      .item-rarity[data-rarity="Boss"]::before {
+        background: var(--rarity-boss);
+      }
+      .item-rarity[data-rarity="Starter"]::before {
+        background: var(--rarity-starter);
+      }
+      .item-rarity[data-rarity="Shop"]::before {
+        background: var(--rarity-shop);
+      }
+
+      .item-desc {
+        font-family: var(--font-display);
+        font-size: 13px;
+        line-height: 1.35;
+        color: var(--ink-secondary);
+        margin-top: 1px;
+      }
+
+      .item-stack {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--accent-gold);
+        font-weight: 500;
+      }
+
+      .empty {
+        padding: 40px 24px;
+        text-align: center;
+        color: var(--ink-muted);
+        font-style: italic;
+        font-size: 15px;
+      }
+
+      .status {
+        position: fixed;
+        left: 16px;
+        top: 16px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: var(--ink-muted);
+        padding: 5px 10px;
+        background: var(--bg-overlay);
+        border-left: 2px solid var(--ink-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 60;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .status[data-state="ok"] {
+        border-left-color: var(--accent-gold);
+        color: var(--ink-secondary);
+      }
+      .status[data-state="error"] {
+        border-left-color: var(--accent-red);
+        color: var(--accent-red);
+        opacity: 1 !important;
+      }
+
+      .status .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--ink-muted);
+      }
+
+      .status[data-state="ok"] .dot {
+        background: var(--accent-gold);
+        box-shadow: 0 0 6px var(--accent-gold);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      .status[data-state="error"] .dot {
+        background: var(--accent-red);
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      .panel-close {
+        all: unset;
+        cursor: pointer;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-muted);
+        padding: 2px 8px;
+        border: 1px solid var(--border-subtle);
+        transition:
+          color 120ms,
+          border-color 120ms;
+      }
+
+      .panel-close:hover {
+        color: var(--ink-secondary);
+        border-color: var(--border-accent);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="status" id="status" data-state="connecting">
+      <span class="dot"></span>
+      <span id="status-text">CONNECTING…</span>
+    </div>
+
+    <div id="hotspot-layer">
+      <div id="relic-hotspots"></div>
+      <div id="potion-hotspots"></div>
+      <div class="hotspot hotspot-deck" id="hs-deck" title="View Deck"></div>
+      <div class="hotspot hotspot-draw" id="hs-draw" title="Draw Pile"></div>
+      <div
+        class="hotspot hotspot-discard"
+        id="hs-discard"
+        title="Discard Pile"
+      ></div>
+      <div
+        class="hotspot hotspot-exhaust"
+        id="hs-exhaust"
+        title="Exhaust Pile"
+      ></div>
+    </div>
+
+    <div class="tooltip" id="tooltip">
+      <div class="tooltip-title" id="tt-title"></div>
+      <div class="tooltip-meta">
+        <div class="rarity-dot" id="tt-dot"></div>
+        <span id="tt-meta"></span>
+      </div>
+      <div class="tooltip-desc" id="tt-desc"></div>
+    </div>
+
+    <div class="panel" id="panel-deck">
+      <div class="panel-header">
+        <div class="panel-title" id="pd-title">Deck</div>
+        <div style="display: flex; gap: 10px; align-items: center">
+          <div class="panel-meta" id="pd-meta"></div>
+          <button class="panel-close" id="pd-close">✕</button>
+        </div>
+      </div>
+      <div class="panel-tabs" id="pd-tabs"></div>
+      <div class="panel-body" id="pd-body"></div>
+    </div>
+
+    <div class="panel" id="panel-combat">
+      <div class="panel-header">
+        <div class="panel-title" id="pc-title">Pile</div>
+        <div style="display: flex; gap: 10px; align-items: center">
+          <div class="panel-meta" id="pc-meta"></div>
+          <button class="panel-close" id="pc-close">✕</button>
+        </div>
+      </div>
+      <div class="panel-body" id="pc-body"></div>
+    </div>
+
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <script src="overlay.js"></script>
+  </body>
+</html>

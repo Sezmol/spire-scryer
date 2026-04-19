@@ -1,0 +1,11 @@
+.env
+.godot/
+.wolf/
+.wrangler/
+.claude/
+release/**/*.zip
+CLAUDE.md
+bin/
+obj/
+*.user
+node_modules/
